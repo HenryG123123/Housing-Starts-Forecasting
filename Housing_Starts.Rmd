@@ -1,0 +1,27 @@
+---
+title: "Housing Starts Time Series Data"
+author: "Haojun Gong"
+date: "2026-09-27"
+output: html_document
+---
+# Data Description
+
+This dataset contains monthly data on new privately-owned housing units started in the United States. The dataset covers the period from January 1959 to August 2026. The data are not seasonally adjusted and are reported in thousands of housing units.
+
+## Data Dictionary
+
+- **observation_date:** The month associated with each observation. The date is recorded using the first day of each month (YYYY-MM-DD).
+- **HOUSTNSA:** The number of new privately-owned housing units started during the month, measured in thousands of units.
+
+# Data Collection Methodology
+
+The housing starts data are produced by the U.S. Census Bureau through the Survey of Construction (SOC), which is partially funded by the U.S. Department of Housing and Urban Development (HUD). The survey collects information on new privately-owned residential construction across the United States.
+
+In areas where building permits are required, Census Bureau field representatives select a sample of residential building permits and contact builders or owners to determine when construction actually begins. In sampled areas where building permits are not required, field representatives identify new residential construction through field observation. A housing unit is considered "started" when excavation begins for the footings or foundation of the building.
+
+The data are collected and published monthly. The dataset used in this project is the not seasonally adjusted series and was retrieved from FRED (Federal Reserve Economic Data), maintained by the Federal Reserve Bank of St. Louis.
+
+# Why This Dataset Intrigues Me
+
+I chose this dataset because housing construction is an important part of economic activity and is also related to supply chain activities. 
+I also noticed that the data shows clear fluctuations and seasonal patterns. Since the dataset contains monthly observations over a long period of time, I think it is a good dataset for practicing time series forecasting. I would like to explore these historical patterns and use them to forecast future housing starts.
