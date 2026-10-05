@@ -1,0 +1,155 @@
+---
+title: "HW4 forecast"
+author: "Haojun Gong"
+date: "2026-10-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(fpp2)
+
+housing <- read.csv("HOUSTNSA.csv")
+
+```
+
+
+```{r}
+housing_ts <- ts(housing$HOUSTNSA,
+                 start = c(1959, 1),
+                 frequency = 12)
+
+```
+
+```{r}
+plot(housing_ts,
+     main = "Monthly U.S. Housing Starts",
+     xlab = "Year",
+     ylab = "Thousands of Units")
+```
+```{r}
+train <- window(housing_ts, end = c(2024, 8))
+
+test <- window(housing_ts, start = c(2024, 9))
+
+length(train)
+length(test)
+```
+```{r}
+mean_forecast <- meanf(train, 24)
+```
+
+```{r}
+naive_forecast <- rwf(train, 24)
+
+```
+```{r}
+snaive_forecast <- snaive(train, 24)
+
+```
+```{r}
+MA5_forecast <- ma(train, order = 5)
+
+MA9_forecast <- ma(train, order = 9)
+
+```
+```{r}
+rwf_forecast <- rwf(train, 24, drift = TRUE)
+```
+```{r}
+SSE_Simple <- HoltWinters(train, beta = FALSE, gamma = FALSE)
+```
+```{r}
+ets_forecast <- ets(train)
+plot(ets_forecast)
+```
+
+The ETS model automatically selected an ETS(M,Ad,M) specification for the training data. This represents multiplicative errors, an additive damped trend, and multiplicative seasonality. The result indicates that the housing starts data contain both a changing trend and a strong seasonal pattern. The multiplicative seasonality also suggests that the size of the seasonal fluctuations changes with the level of the series.
+
+```{r}
+HW_forecast <- HoltWinters(train)
+
+plot(HW_forecast)
+```
+The Holt-Winters model captures level, trend, and seasonality together. In the fitted model plot, the fitted values follow the observed housing starts fairly closely and reproduce much of the seasonal movement. This suggests that a model that includes seasonality is appropriate for this dataset.
+
+```{r}
+SSE_forecast <- forecast(SSE_Simple, h = 24)
+```
+```{r}
+ETS_24_forecast <- forecast(ets_forecast, h = 24)
+```
+```{r}
+HW_24_forecast <- forecast(HW_forecast, h = 24)
+```
+```{r}
+RMSE_comparison <- data.frame(
+  Model = c("Mean",
+            "Naive",
+            "Random Walk",
+            "Seasonal Naive",
+            "Simple Exponential Smoothing",
+            "ETS",
+            "Holt-Winters"),
+  
+  RMSE = c(
+    accuracy(mean_forecast, test)["Test set", "RMSE"],
+    accuracy(naive_forecast, test)["Test set", "RMSE"],
+    accuracy(rwf_forecast, test)["Test set", "RMSE"],
+    accuracy(snaive_forecast, test)["Test set", "RMSE"],
+    accuracy(SSE_forecast, test)["Test set", "RMSE"],
+    accuracy(ETS_24_forecast, test)["Test set", "RMSE"],
+    accuracy(HW_24_forecast, test)["Test set", "RMSE"]
+  )
+)
+
+RMSE_comparison
+```
+I used RMSE to compare forecast accuracy. The last 24 months of the dataset were reserved as a test set, while all earlier observations were used as the training set. Using 24 months allows the models to be evaluated over two complete annual seasonal cycles. A lower RMSE indicates better forecasting accuracy.
+
+Based on the 24-month test-set RMSE, Holt-Winters is the best-performing model for this dataset. Its ability to account for level, trend, and seasonality appears to be especially useful for forecasting monthly housing starts.
+
+```{r}
+plot(window(housing_ts, start = c(2020, 1)),
+     main = "Housing Starts: Actual vs Forecasts",
+     xlab = "Year",
+     ylab = "Thousands of Units",
+     lwd = 2)
+
+lines(mean_forecast$mean, col = "red")
+lines(naive_forecast$mean, col = "green")
+lines(rwf_forecast$mean, col = "blue")
+lines(snaive_forecast$mean, col = "orange")
+lines(SSE_forecast$mean, col = "purple")
+lines(ETS_24_forecast$mean, col = "brown")
+lines(HW_24_forecast$mean, col = "cyan")
+
+legend("topright",
+       legend = c("Actual",
+                  "Mean",
+                  "Naive",
+                  "Random Walk",
+                  "Seasonal Naive",
+                  "Simple Exponential Smoothing",
+                  "ETS",
+                  "Holt-Winters"),
+       col = c("black",
+               "red",
+               "green",
+               "blue",
+               "orange",
+               "purple",
+               "brown",
+               "cyan"),
+       lty = 1,
+       lwd = 2,
+       cex = 0.5)
+```
+
+
+Several forecasting methods from class were applied to the housing starts data. The Mean, Naive, Random Walk, Seasonal Naive, Simple Exponential Smoothing, ETS, and Holt-Winters methods were used. I also applied 5-month and 9-month moving averages to examine how different moving average windows smooth the historical data.  
+The models produce noticeably different forecasts. The Mean, Naive, Random Walk, and Simple Exponential Smoothing forecasts are relatively flat and do not capture the strong seasonal fluctuations in housing starts. In comparison, Seasonal Naive, ETS, and Holt-Winters are able to capture more of the seasonal pattern in the data.
+
+The forecast comparison plot shows the actual housing starts together with the forecasts from the different models. The Mean, Naive, Random Walk, and Simple Exponential Smoothing forecasts are relatively flat and miss much of the seasonal movement. Seasonal Naive, ETS, and Holt-Winters follow the recurring seasonal pattern more closely. This visual result supports the RMSE comparison, where Holt-Winters achieved the lowest forecast error.
