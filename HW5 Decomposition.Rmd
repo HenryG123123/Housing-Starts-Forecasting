@@ -1,0 +1,41 @@
+---
+title: "HW5 Decomposition"
+author: "Haojun Gong"
+date: "2026-10-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(fpp2)
+housing <- read.csv("HOUSTNSA.csv")
+housing_ts <- ts(housing$HOUSTNSA, start = c(1959, 1), frequency = 12)
+plot(housing_ts)
+```
+```{r}
+stl_decomp <- stl(housing_ts, s.window = "periodic")
+plot(stl_decomp)
+```
+```{r}
+housing_sa <- seasadj(stl_decomp)
+plot(housing_ts)
+lines(housing_sa, col = "red")
+```
+
+The seasonally adjusted series removes the recurring seasonal effects from the original housing starts data. The adjusted series still shows substantial fluctuations, including a sharp decline around 2008–2010 and a gradual recovery afterward. This suggests that changes in housing starts are driven by both seasonal patterns and longer-term movements.
+```{r}
+f_stl <- forecast(stl_decomp, h=24)
+f_stl
+plot(f_stl)
+```
+```{r}
+decomp_housing <- decompose(housing_ts)
+plot(decomp_housing)
+attributes(decomp_housing)
+seasadj(decomp_housing)
+```
+
+The decomposition results show that U.S. housing starts have clear seasonal patterns and significant long-term fluctuations. Both STL and decomposition reveal a sharp decline around 2008–2010, followed by a gradual recovery. After removing seasonality, the underlying movements become easier to observe. The 24-month STL forecast suggests continued seasonal fluctuations without a strong upward or downward trend, although the wide prediction intervals indicate uncertainty.
