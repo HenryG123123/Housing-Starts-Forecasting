@@ -1,0 +1,56 @@
+---
+title: "Housing Forecasting with ARIMA"
+author: "Haojun Gong"
+date: "2026-11-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(fpp2)
+library(forecast)
+
+housing <- read.csv("HOUSTNSA.csv")
+
+housing_ts <- ts(housing$HOUSTNSA, start = c(1959, 1), frequency = 12)
+plot(housing_ts)
+```
+```{r}
+nsdiffs(housing_ts)
+ndiffs(housing_ts)
+ndiffs(diff(housing_ts, 12))
+housing_fit <- auto.arima(housing_ts, trace = TRUE, stepwise = FALSE)
+housing_fit
+```
+I used auto.arima() and got ARIMA(3,0,0)(1,1,1)[12]. Since my data is monthly, I compared each month’s housing starts with the same month a year earlier. After that, ndiffs() returned 0, so I didn’t need to difference the data again.
+
+
+```{r}
+Acf(housing_fit$residuals)
+Box.test(residuals(housing_fit), lag = 20, type = "Ljung")
+plot.ts(residuals(housing_fit))
+hist(housing_fit$residuals)
+
+```
+```{r}
+tsdiag(housing_fit)
+```
+
+I checked the residual plots and ran the Ljung–Box test at lag 20. The p-value was 0.0167, which is below 0.05. This suggests that the residuals are still correlated, so the model may have missed some patterns in the data.
+
+```{r}
+housing_forecast <- forecast(housing_fit, h = 5, level = c(99.5))
+housing_forecast
+plot(housing_forecast)
+```
+
+I forecasted monthly housing starts from September 2026 through January 2027. The forecast decreases each month, from about 111,100 units in September to about 91,400 units in January. The 99.5% prediction intervals get wider for later months, showing more uncertainty farther into the forecast.
+
+```{r}
+accuracy(housing_fit)
+```
+
+The model had an MAE of 8.02 thousand units, an RMSE of 10.36 thousand units, and a MAPE of 7.36%. The MAE means that the fitted values were off by about 8,020 housing units per month on average.
